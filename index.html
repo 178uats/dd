@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>D&D Mini Hoja</title>
+    <style>
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #f0f0f0;
+            margin: 0;
+            padding: 10px;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #e67e22;
+            font-size: 20px;
+            margin: 5px 0 15px 0;
+        }
+        .card {
+            background-color: #2c2c2c;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        label {
+            font-size: 13px;
+            color: #b0b0b0;
+            display: block;
+            margin-top: 5px;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 3px;
+            background-color: #111;
+            border: 1px solid #555;
+            color: #fff;
+            font-size: 16px;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .grid-2 {
+            display: flex;
+            gap: 10px;
+        }
+        .grid-2 > div {
+            flex: 1;
+        }
+        .btn-group {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+        }
+        button {
+            flex: 1;
+            padding: 10px;
+            background-color: #d35400;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        button:active {
+            background-color: #e67e22;
+        }
+        textarea {
+            width: 100%;
+            height: 80px;
+            background-color: #111;
+            border: 1px solid #555;
+            color: #fff;
+            border-radius: 4px;
+            padding: 8px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        .save-msg {
+            text-align: center;
+            font-size: 11px;
+            color: #27ae60;
+            margin-top: 5px;
+            height: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>D&D 5e - Mini Hoja</h1>
+
+    <!-- DATOS GENERALES -->
+    <div class="card">
+        <label>Nombre del Personaje</label>
+        <input type="text" id="nombre" placeholder="Ej: Valeros">
+        
+        <div class="grid-2">
+            <div>
+                <label>Clase / Nivel</label>
+                <input type="text" id="clase" placeholder="Guerrero 3">
+            </div>
+            <div>
+                <label>Clase de Armadura (CA)</label>
+                <input type="number" id="ca" value="15">
+            </div>
+        </div>
+    </div>
+
+    <!-- PUNTOS DE VIDA -->
+    <div class="card">
+        <label>Puntos de Vida (Actuales / Máximos)</label>
+        <div class="grid-2">
+            <input type="number" id="pvActual" value="20">
+            <input type="number" id="pvMax" value="20">
+        </div>
+        <div class="btn-group">
+            <button onclick="modPV(-1)">-1 PV</button>
+            <button onclick="modPV(1)">+1 PV</button>
+            <button onclick="modPV(-5)">-5</button>
+            <button onclick="modPV(5)">+5</button>
+        </div>
+    </div>
+
+    <!-- ATRIBUTOS PRINCIPALES -->
+    <div class="card">
+        <label>Atributos Principales</label>
+        <div class="grid-2">
+            <div>
+                <label>Fuerza</label>
+                <input type="text" id="fuerza" value="16 (+3)">
+            </div>
+            <div>
+                <label>Destreza</label>
+                <input type="text" id="destreza" value="14 (+2)">
+            </div>
+        </div>
+        <div class="grid-2">
+            <div>
+                <label>Constitución</label>
+                <input type="text" id="con" value="15 (+2)">
+            </div>
+            <div>
+                <label>Inteligencia</label>
+                <input type="text" id="int" value="10 (+0)">
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTAS / HECHIZOS / INVENTARIO -->
+    <div class="card">
+        <label>Notas Rápidas / Inventario / Hechizos</label>
+        <textarea id="notas" placeholder="Anota aquí tus objetos, oro o conjuros..."></textarea>
+    </div>
+
+    <!-- BOTONES DE ACCIÓN -->
+    <button onclick="guardarDatos()" style="background-color: #27ae60; width: 100%;">GUARDAR CAMBIOS</button>
+    <div class="save-msg" id="msg"></div>
+
+    <script>
+        // Función para cambiar los PV rápidamente
+        function modPV(cantidad) {
+            var inputPV = document.getElementById('pvActual');
+            var valorActual = parseInt(inputPV.value) || 0;
+            inputPV.value = valorActual + cantidad;
+            guardarDatos();
+        }
+
+        // Guardar automáticamente en la memoria local del navegador (localStorage)
+        function guardarDatos() {
+            try {
+                localStorage.setItem('dnd_nombre', document.getElementById('nombre').value);
+                localStorage.setItem('dnd_clase', document.getElementById('clase').value);
+                localStorage.setItem('dnd_ca', document.getElementById('ca').value);
+                localStorage.setItem('dnd_pvActual', document.getElementById('pvActual').value);
+                localStorage.setItem('dnd_pvMax', document.getElementById('pvMax').value);
+                localStorage.setItem('dnd_fuerza', document.getElementById('fuerza').value);
+                localStorage.setItem('dnd_destreza', document.getElementById('destreza').value);
+                localStorage.setItem('dnd_con', document.getElementById('con').value);
+                localStorage.setItem('dnd_int', document.getElementById('int').value);
+                localStorage.setItem('dnd_notas', document.getElementById('notas').value);
+
+                var msg = document.getElementById('msg');
+                msg.innerHTML = "¡Guardado con éxito en el iPod!";
+                setTimeout(function() {
+                    msg.innerHTML = "";
+                }, 2000);
+            } catch(e) {
+                // Por si el almacenamiento local está restringido en archivos locales de iOS
+            }
+        }
+
+        // Cargar datos guardados al abrir la página
+        window.onload = function() {
+            if(localStorage.getItem('dnd_nombre')) document.getElementById('nombre').value = localStorage.getItem('dnd_nombre');
+            if(localStorage.getItem('dnd_clase')) document.getElementById('clase').value = localStorage.getItem('dnd_clase');
+            if(localStorage.getItem('dnd_ca')) document.getElementById('ca').value = localStorage.getItem('dnd_ca');
+            if(localStorage.getItem('dnd_pvActual')) document.getElementById('pvActual').value = localStorage.getItem('dnd_pvActual');
+            if(localStorage.getItem('dnd_pvMax')) document.getElementById('pvMax').value = localStorage.getItem('dnd_pvMax');
+            if(localStorage.getItem('dnd_fuerza')) document.getElementById('fuerza').value = localStorage.getItem('dnd_fuerza');
+            if(localStorage.getItem('dnd_destreza')) document.getElementById('destreza').value = localStorage.getItem('dnd_destreza');
+            if(localStorage.getItem('dnd_con')) document.getElementById('con').value = localStorage.getItem('dnd_con');
+            if(localStorage.getItem('dnd_int')) document.getElementById('int').value = localStorage.getItem('dnd_int');
+            if(localStorage.getItem('dnd_notas')) document.getElementById('notas').value = localStorage.getItem('dnd_notas');
+        }
+    </script>
+</body>
+</html>
