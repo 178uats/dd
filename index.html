@@ -3,151 +3,535 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lector QR iPod Touch 5G</title>
-    <!-- Librería ligera para decodificar QR basada en JS puro -->
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <title>Temple Run</title>
+    <!-- Configuración PWA para iOS Antiguo -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="TempleRun">
+    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="manifest" href="manifest.json">
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f2f2f7;
-            color: #1c1c1e;
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body, html {
             margin: 0;
-            padding: 20px;
-            text-align: center;
-        }
-        .container {
-            max-width: 400px;
-            margin: 0 auto;
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        h2 {
-            font-size: 20px;
-            margin-top: 0;
-        }
-        p {
-            font-size: 14px;
-            color: #636366;
-        }
-        .btn-capture {
-            background-color: #007aff;
-            color: white;
-            border: none;
-            padding: 14px 20px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 8px;
+            padding: 0;
             width: 100%;
-            cursor: pointer;
-            margin-top: 15px;
-        }
-        .btn-capture:active {
-            background-color: #0056b3;
-        }
-        #file-input {
-            display: none;
-        }
-        #result-container {
-            margin-top: 20px;
-            padding: 12px;
-            background: #e5e5ea;
-            border-radius: 8px;
-            word-break: break-all;
-            display: none;
-        }
-        #result-link {
-            color: #007aff;
-            font-weight: bold;
-            text-decoration: none;
-            display: block;
-            margin-top: 8px;
+            height: 100%;
+            overflow: hidden;
+            background-color: #1a1005;
+            font-family: sans-serif;
+            touch-action: none;
         }
         canvas {
-            display: none;
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        /* Pantallas de Menú / Interfaz */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(26, 16, 5, 0.92);
+            z-index: 10;
+        }
+        .hidden {
+            display: none !important;
+        }
+        h1 {
+            color: #ffb300;
+            font-size: 38px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 6px rgba(0,0,0,0.8);
+            text-align: center;
+        }
+        .btn {
+            background: linear-gradient(to bottom, #ffb300, #f57c00);
+            color: #fff;
+            border: 3px solid #ffe082;
+            padding: 12px 30px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 12px;
+            margin: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            width: 240px;
+            text-align: center;
+        }
+        .btn:active {
+            transform: scale(0.95);
+        }
+        /* HUD de Juego */
+        #hud {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            pointer-events: none;
+            z-index: 5;
+        }
+        .hud-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        #pause-btn {
+            pointer-events: auto;
+            background: rgba(0,0,0,0.5);
+            border: 2px solid white;
+            color: white;
+            padding: 6px 14px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        /* Controles táctiles en pantalla para móviles */
+        #mobile-controls {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            padding: 0 30px;
+            z-index: 5;
+            pointer-events: none;
+        }
+        .control-btn {
+            pointer-events: auto;
+            background: rgba(255, 255, 255, 0.25);
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            color: white;
+            font-size: 32px;
+            width: 75px;
+            height: 75px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+        .control-btn:active {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        .shop-item {
+            color: white;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid #ffb300;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 8px;
+            width: 280px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .shop-item span {
+            font-size: 14px;
+            color: #ffe082;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Lector QR para iPod Touch</h2>
-    <p>Toca el botón para abrir la cámara, fotografiar un código QR y leerlo al instante.</p>
-
-    <!-- El atributo accept="image/*" y capture="environment" forzarán la apertura de la cámara trasera -->
-    <button class="btn-capture" onclick="document.getElementById('file-input').click();">Escanear con Cámara</button>
-    <input type="file" id="file-input" accept="image/*" capture="environment" onchange="handleImage(this)">
-
-    <div id="result-container">
-        <strong>Resultado:</strong>
-        <p id="result-text"></p>
-        <a id="result-link" href="#" target="_blank" style="display:none;">Abrir Enlace</a>
+    <!-- Menú Principal -->
+    <div id="main-menu" class="screen">
+        <h1>TEMPLE RUN WEB</h1>
+        <button class="btn" onclick="startGame()">PLAY</button>
+        <button class="btn" onclick="openShop()">TIENDA</button>
+        <button class="btn" onclick="openLevels()">ELEGIR NIVEL</button>
     </div>
-</div>
 
-<canvas id="canvas"></canvas>
+    <!-- Menú de Niveles -->
+    <div id="levels-menu" class="screen hidden">
+        <h1>SELECCIONAR NIVEL</h1>
+        <button class="btn" onclick="selectLevel(0)">Nivel 1: Templo Clásico</button>
+        <button class="btn" onclick="selectLevel(1)">Nivel 2: Cueva de Lava</button>
+        <button class="btn" onclick="selectLevel(2)">Nivel 3: Selva Helada</button>
+        <button class="btn" style="background:#795548; border-color:#d7ccc8;" onclick="closeLevels()">VOLVER</button>
+    </div>
 
-<script>
-function handleImage(input) {
-    if (input.files && input.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function (e) {
-            var img = new Image();
-            img.onload = function () {
-                var canvas = document.getElementById('canvas');
-                var ctx = canvas.getContext('2d');
-                
-                // Redimensionar si la imagen es muy grande para optimizar procesamiento en el iPod
-                var maxDimension = 800;
-                var width = img.width;
-                var height = img.height;
-                
-                if (width > height && width > maxDimension) {
-                    height *= maxDimension / width;
-                    width = maxDimension;
-                } else if (height > maxDimension) {
-                    width *= maxDimension / height;
-                    height = maxDimension;
-                }
-                
-                canvas.width = width;
-                canvas.height = height;
-                ctx.drawImage(img, 0, 0, width, height);
-                
-                var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                var code = jsQR(imageData.data, imageData.width, imageData.height, {
-                    inversionAttempts: "dontInvert",
+    <!-- Tienda de Ventajas -->
+    <div id="shop-menu" class="screen hidden">
+        <h1>TIENDA DE VENTAJAS</h1>
+        <div style="color: #ffb300; font-size: 18px; margin-bottom: 10px;">Monedas: <span id="shop-coins">0</span></div>
+        
+        <div class="shop-item">
+            <div>
+                <strong>Doble Puntuación (1 Partida)</strong><br>
+                <span>Gana el doble de puntos</span>
+            </div>
+            <button class="btn" style="width:90px; padding:6px; font-size:14px;" onclick="buyItem('doubleScore', 30)">30 🪙</button>
+        </div>
+
+        <div class="shop-item">
+            <div>
+                <strong>Imán de Monedas (1 Partida)</strong><br>
+                <span>Atrae más tesoros</span>
+            </div>
+            <button class="btn" style="width:90px; padding:6px; font-size:14px;" onclick="buyItem('magnet', 50)">50 🪙</button>
+        </div>
+
+        <button class="btn" style="background:#795548; border-color:#d7ccc8; margin-top:20px;" onclick="closeShop()">VOLVER</button>
+    </div>
+
+    <!-- Pantalla de Pausa -->
+    <div id="pause-screen" class="screen hidden" style="background: rgba(0,0,0,0.8);">
+        <h1>JUEGO PAUSADO</h1>
+        <button class="btn" onclick="resumeGame()">REANUDAR</button>
+        <button class="btn" style="background:#d32f2f; border-color:#ff8a80;" onclick="quitToMenu()">SALIR AL MENÚ</button>
+    </div>
+
+    <!-- Pantalla de Game Over -->
+    <div id="gameover-screen" class="screen hidden">
+        <h1>¡FIN DEL JUEGO!</h1>
+        <div style="color: white; font-size: 20px; margin-bottom: 15px;">Puntuación: <span id="final-score">0</span></div>
+        <div style="color: #ffb300; font-size: 18px; margin-bottom: 25px;">Monedas ganadas: +<span id="final-coins">0</span></div>
+        <button class="btn" onclick="startGame()">REINTENTAR</button>
+        <button class="btn" style="background:#795548; border-color:#d7ccc8;" onclick="quitToMenu()">MENÚ PRINCIPAL</button>
+    </div>
+
+    <!-- HUD y Controles de Partida -->
+    <div id="hud" class="hidden">
+        <div class="hud-group">
+            <div>Puntos: <span id="score">0</span></div>
+            <div>🪙 <span id="coins">0</span></div>
+        </div>
+        <button id="pause-btn" onclick="pauseGame()">PAUSA</button>
+    </div>
+
+    <div id="mobile-controls" class="hidden">
+        <div class="control-btn" onclick="movePlayer(-1)">◀</div>
+        <div class="control-btn" onclick="movePlayer(1)">▶</div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        var canvas = document.getElementById('gameCanvas');
+        var ctx = canvas.getContext('2d');
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Variables Globales y Estado
+        var gameState = 'MENU'; // MENU, LEVELS, SHOP, PLAYING, PAUSED, GAMEOVER
+        var score = 0;
+        var totalCoins = 150; // Monedas iniciales de prueba
+        var sessionCoins = 0;
+        var gameSpeed = 5;
+        var currentLevel = 0; // 0: Clásico, 1: Lava, 2: Hielo
+        var isPaused = false;
+
+        // Carriles: 0 = Izquierda, 1 = Centro, 2 = Derecha
+        var playerLane = 1;
+        var lanes = [-110, 0, 110];
+        var playerTargetX = 0;
+        var playerX = 0;
+
+        var obstacles = [];
+        var coinItems = [];
+        var obstacleTimer = 0;
+
+        // Inventario de Tienda Activo
+        var activePerks = { doubleScore: false, magnet: false };
+
+        // Definición de Niveles / Biomas
+        var levelsData = [
+            { name: "Templo Clásico", bgTop: "#87CEEB", bgBottom: "#2e8b57", roadColor: "#bcaaa4", speed: 5 },
+            { name: "Cueva de Lava", bgTop: "#3e1400", bgBottom: "#b71c1c", roadColor: "#4e342e", speed: 6.5 },
+            { name: "Selva Helada", bgTop: "#263238", bgBottom: "#00acc1", roadColor: "#cfd8dc", speed: 8 }
+        ];
+
+        // Navegación de Menús
+        function openShop() {
+            document.getElementById('shop-coins').innerText = totalCoins;
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('shop-menu').classList.remove('hidden');
+        }
+        function closeShop() {
+            document.getElementById('shop-menu').classList.add('hidden');
+            document.getElementById('main-menu').classList.remove('hidden');
+        }
+        function openLevels() {
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('levels-menu').classList.remove('hidden');
+        }
+        function closeLevels() {
+            document.getElementById('levels-menu').classList.add('hidden');
+            document.getElementById('main-menu').classList.remove('hidden');
+        }
+        function selectLevel(index) {
+            currentLevel = index;
+            closeLevels();
+        }
+
+        function buyItem(itemKey, cost) {
+            if (totalCoins >= cost) {
+                totalCoins -= cost;
+                activePerks[itemKey] = true;
+                document.getElementById('shop-coins').innerText = totalCoins;
+                alert('¡Ventaja comprada con éxito para tu próxima partida!');
+            } else {
+                alert('¡No tienes suficientes monedas!');
+            }
+        }
+
+        function startGame() {
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('levels-menu').classList.add('hidden');
+            document.getElementById('shop-menu').classList.add('hidden');
+            document.getElementById('gameover-screen').classList.add('hidden');
+            document.getElementById('pause-screen').classList.add('hidden');
+            
+            document.getElementById('hud').classList.remove('hidden');
+            document.getElementById('mobile-controls').classList.remove('hidden');
+
+            score = 0;
+            sessionCoins = 0;
+            obstacles = [];
+            coinItems = [];
+            playerLane = 1;
+            gameSpeed = levelsData[currentLevel].speed;
+            gameState = 'PLAYING';
+            isPaused = false;
+            loop();
+        }
+
+        function pauseGame() {
+            if (gameState !== 'PLAYING') return;
+            gameState = 'PAUSED';
+            document.getElementById('pause-screen').classList.remove('hidden');
+        }
+
+        function resumeGame() {
+            document.getElementById('pause-screen').classList.add('hidden');
+            gameState = 'PLAYING';
+            loop();
+        }
+
+        function quitToMenu() {
+            document.getElementById('pause-screen').classList.add('hidden');
+            document.getElementById('gameover-screen').classList.add('hidden');
+            document.getElementById('hud').classList.add('hidden');
+            document.getElementById('mobile-controls').classList.add('hidden');
+            document.getElementById('main-menu').classList.remove('hidden');
+            gameState = 'MENU';
+        }
+
+        function movePlayer(dir) {
+            if (gameState !== 'PLAYING') return;
+            playerLane += dir;
+            if (playerLane < 0) playerLane = 0;
+            if (playerLane > 2) playerLane = 2;
+        }
+
+        // Controles de Teclado
+        window.addEventListener('keydown', function(e) {
+            if (gameState !== 'PLAYING') {
+                if (e.key === ' ' && gameState === 'GAMEOVER') startGame();
+                return;
+            }
+            if (e.key === 'ArrowLeft') movePlayer(-1);
+            if (e.key === 'ArrowRight') movePlayer(1);
+            if (e.key === 'Escape' || e.key === 'p') pauseGame();
+        });
+
+        // Controles Táctiles (Swipe)
+        var touchStartX = 0;
+        window.addEventListener('touchstart', function(e) {
+            touchStartX = e.touches[0].clientX;
+        }, {passive: true});
+
+        window.addEventListener('touchend', function(e) {
+            if (gameState !== 'PLAYING' || !touchStartX) return;
+            var diffX = e.changedTouches[0].clientX - touchStartX;
+            if (Math.abs(diffX) > 35) {
+                if (diffX > 0) movePlayer(1);
+                else movePlayer(-1);
+            }
+            touchStartX = 0;
+        }, {passive: true});
+
+        function spawnElements() {
+            let lane = Math.floor(Math.random() * 3);
+            // Obstáculo
+            obstacles.push({
+                lane: lane,
+                y: -100,
+                width: 70,
+                height: 70,
+                color: currentLevel === 1 ? '#ff9800' : (currentLevel === 2 ? '#00e5ff' : '#d32f2f')
+            });
+
+            // Moneda opcional en otro carril
+            if (Math.random() > 0.4) {
+                let coinLane;
+                do { coinLane = Math.floor(Math.random() * 3); } while(coinLane === lane);
+                coinItems.push({
+                    lane: coinLane,
+                    y: -120,
+                    size: 24
                 });
-                
-                var resultContainer = document.getElementById('result-container');
-                var resultText = document.getElementById('result-text');
-                var resultLink = document.getElementById('result-link');
-                
-                resultContainer.style.display = 'block';
-                
-                if (code) {
-                    resultText.innerText = code.data;
-                    
-                    // Comprobar si el texto decodificado es una URL válida
-                    if (code.data.startsWith('http://') || code.data.startsWith('https://')) {
-                        resultLink.href = code.data;
-                        resultLink.style.display = 'block';
-                        resultLink.innerText = "Abrir Enlace: " + code.data;
-                    } else {
-                        resultLink.style.display = 'none';
-                    }
-                } else {
-                    resultText.innerText = "No se pudo detectar ningún código QR. Inténtá de nuevo asegurándote de enfocar bien.";
-                    resultLink.style.display = 'none';
-                }
-            };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-</script>
+            }
+        }
 
+        function update() {
+            if (gameState !== 'PLAYING') return;
+
+            playerTargetX = lanes[playerLane];
+            playerX += (playerTargetX - playerX) * 0.25;
+
+            obstacleTimer++;
+            if (obstacleTimer > Math.max(25, 80 - Math.floor(score / 15))) {
+                spawnElements();
+                obstacleTimer = 0;
+            }
+
+            // Mover Obstáculos
+            let playerYPos = canvas.height - 180;
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                obstacles[i].y += gameSpeed;
+
+                // Colisiones
+                if (
+                    obstacles[i].lane === playerLane &&
+                    obstacles[i].y + obstacles[i].height > playerYPos &&
+                    obstacles[i].y < playerYPos + 60
+                ) {
+                    gameState = 'GAMEOVER';
+                    totalCoins += sessionCoins;
+                    document.getElementById('final-score').innerText = Math.floor(score);
+                    document.getElementById('final-coins').innerText = sessionCoins;
+                    document.getElementById('hud').classList.add('hidden');
+                    document.getElementById('mobile-controls').classList.add('hidden');
+                    document.getElementById('gameover-screen').classList.remove('hidden');
+                    return;
+                }
+
+                if (obstacles[i].y > canvas.height) {
+                    obstacles.splice(i, 1);
+                    let pointsEarned = activePerks.doubleScore ? 20 : 10;
+                    score += pointsEarned;
+                    gameSpeed += 0.02;
+                }
+            }
+
+            // Mover Monedas
+            for (let i = coinItems.length - 1; i >= 0; i--) {
+                // Imán perk
+                if (activePerks.magnet && coinItems[i].lane !== playerLane && coinItems[i].y > canvas.height - 300) {
+                    coinItems[i].lane = playerLane;
+                }
+
+                coinItems[i].y += gameSpeed;
+
+                if (
+                    coinItems[i].lane === playerLane &&
+                    coinItems[i].y + coinItems[i].size > playerYPos &&
+                    coinItems[i].y < playerYPos + 60
+                ) {
+                    sessionCoins += 5;
+                    coinItems.splice(i, 1);
+                } else if (coinItems[i].y > canvas.height) {
+                    coinItems.splice(i, 1);
+                }
+            }
+
+            document.getElementById('score').innerText = Math.floor(score);
+            document.getElementById('coins').innerText = sessionCoins;
+        }
+
+        function draw() {
+            var currentBiome = levelsData[currentLevel];
+
+            // Fondo con gradiente dinámico según bioma
+            var grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            grad.addColorStop(0, currentBiome.bgTop);
+            grad.addColorStop(1, currentBiome.bgBottom);
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            let centerX = canvas.width / 2;
+
+            // Camino con perspectiva
+            ctx.fillStyle = currentBiome.roadColor;
+            ctx.beginPath();
+            ctx.moveTo(centerX - 190, canvas.height);
+            ctx.lineTo(centerX - 50, 0);
+            ctx.lineTo(centerX + 50, 0);
+            ctx.lineTo(centerX + 190, canvas.height);
+            ctx.fill();
+
+            // Líneas de carriles
+            ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(centerX - 63, canvas.height); ctx.lineTo(centerX - 16, 0);
+            ctx.moveTo(centerX + 63, canvas.height); ctx.lineTo(centerX + 16, 0);
+            ctx.stroke();
+
+            // Dibujar Monedas
+            for (let coin of coinItems) {
+                let coinX = centerX + lanes[coin.lane];
+                ctx.fillStyle = '#ffd700';
+                ctx.beginPath();
+                ctx.arc(coinX, coin.y, coin.size / 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#ffa000';
+                ctx.stroke();
+            }
+
+            // Dibujar Jugador
+            let pWidth = 50;
+            let pHeight = 80;
+            let pScreenX = centerX + playerX - pWidth / 2;
+            let pScreenY = canvas.height - 180;
+
+            ctx.fillStyle = currentLevel === 2 ? '#00bcd4' : '#ff9800';
+            ctx.fillRect(pScreenX, pScreenY, pWidth, pHeight);
+            ctx.fillStyle = '#3e2723';
+            ctx.fillRect(pScreenX + 10, pScreenY + 15, 30, 30);
+
+            // Dibujar Obstáculos
+            for (let obs of obstacles) {
+                let obsScreenX = centerX + lanes[obs.lane] - obs.width / 2;
+                ctx.fillStyle = obs.color;
+                ctx.fillRect(obsScreenX, obs.y, obs.width, obs.height);
+                ctx.fillStyle = '#b71c1c';
+                ctx.fillRect(obsScreenX + 10, obs.y + 10, obs.width - 20, obs.height - 20);
+            }
+        }
+
+        function loop() {
+            if (gameState === 'PLAYING') {
+                update();
+                draw();
+                requestAnimationFrame(loop);
+            }
+        }
+    </script>
 </body>
 </html>
